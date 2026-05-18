@@ -4,10 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,10 +16,12 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "students")
+@Entity
+@Table(name = "students")
 public class Student {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     private String studentName;
@@ -54,15 +55,18 @@ public class Student {
 
     @Builder.Default
     private Boolean faceRegistered = false;
+    @Convert(converter = DoubleListConverter.class)
+    @Column(columnDefinition = "TEXT")
     private java.util.List<Double> faceEmbedding;
 
     @Builder.Default
     private Boolean fingerprintRegistered = false;
+    @Column(columnDefinition = "TEXT")
     private String fingerprintTemplate;
 
-    @CreatedDate
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @LastModifiedDate
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

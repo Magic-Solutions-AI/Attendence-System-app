@@ -12,25 +12,28 @@ import cv2
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
-import pymongo
+import sqlite3
 import numpy as np
 import os
 import base64
 from dotenv import load_dotenv
-from bson.objectid import ObjectId
 from sklearn.metrics.pairwise import cosine_similarity
 
 from pathlib import Path
 dotenv_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=dotenv_path)
 
-MONGO_URI = os.getenv("MONGODB_URI")
-if not MONGO_URI:
-    print(f"[WARNING] MONGODB_URI is not set in environment or {dotenv_path}. Falling back to default (might fail if not local).", flush=True)
+custom_db_path = os.getenv("ATTENDX_DB_PATH")
+if custom_db_path:
+    DB_PATH = custom_db_path
 else:
-    # Log censored URI for debugging
-    censored = MONGO_URI.split("@")[-1] if "@" in MONGO_URI else "could not censor"
-    print(f"[INFO] MONGODB_URI loaded (ending with @{censored})", flush=True)
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "backend", "data", "attendx.db")
+print(f"[INFO] Using SQLite DB at {DB_PATH}", flush=True)
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 
@@ -75,23 +78,7 @@ os.environ.setdefault("MEDIAPIPE_DISABLE_GPU", "1")
 os.environ.setdefault("DISPLAY", "")          # no display server
 os.environ.setdefault("LIBGL_ALWAYS_SOFTWARE", "1")  # Mesa software render
 
-# (Already fetched MONGO_URI above)
-MONGO_DB  = os.getenv("MONGODB_DATABASE", "attendance_db")
-
-try:
-    if not MONGO_URI:
-        # Final fallback/safety
-        MONGO_URI = "mongodb://localhost:27017" # But we know this will likely fail
-    
-    client             = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-    db                 = client[MONGO_DB]
-    students_collection = db["students"]
-    
-    # Optional: trigger a ping to verify connection early?
-    # No, keep it lazy to avoid app crash on startup if Atlas is slow
-except Exception as e:
-    print(f"[ERROR] Could not initialize MongoDB client: {e}")
-    # We don't crash here; routes will handle empty/failed DB access
+# SQLite DB is connected on demand
 
 
 # ── MediaPipe FaceLandmarker — LAZY INIT ─────────────────────
@@ -122,7 +109,7 @@ def get_face_landmarker():
             output_facial_transformation_matrixes=False,
         )
         _face_landmarker = mp_vision.FaceLandmarker.create_from_options(options)
-        print("[INFO] FaceLandmarker model loaded ✓")
+        print("[INFO] FaceLandmarker model loaded successfully")
         return _face_landmarker, None
     except Exception as exc:
         _face_landmarker_err = str(exc)
@@ -288,26 +275,30 @@ def get_mediapipe_embedding(bgr_image: np.ndarray):
 
 
 def load_registered_students():
-    """Load all face-registered students from MongoDB."""
-    students = list(students_collection.find({"faceRegistered": True}))
+    """Load all face-registered students from SQLite."""
     known_embeddings = []
     known_metadata   = []
-
-    for student in students:
-        if "faceEmbedding" in student and student["faceEmbedding"]:
-            # Only load embeddings that match the new model
-            if student.get("embeddingModel") != "mediapipe_face_landmarker_geometric":
-                continue
-            
-            emb = np.array(student["faceEmbedding"], dtype=np.float32)
-            known_embeddings.append(emb)
-            known_metadata.append({
-                "id":             str(student.get("_id")),
-                "studentName":    student.get("studentName"),
-                "batchStartTime": student.get("batchStartTime"),
-                "tutorId":        student.get("tutorId"),
-            })
-
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT id, student_name, batch_start_time, tutor_id, face_embedding FROM students WHERE face_registered = 1")
+        students = c.fetchall()
+        for row in students:
+            if row["face_embedding"]:
+                try:
+                    emb = np.array([float(x) for x in row["face_embedding"].split(",")], dtype=np.float32)
+                    known_embeddings.append(emb)
+                    known_metadata.append({
+                        "id": str(row["id"]),
+                        "studentName": row["student_name"],
+                        "batchStartTime": row["batch_start_time"],
+                        "tutorId": row["tutor_id"],
+                    })
+                except Exception as e:
+                    print(f"Error parsing embedding for {row['id']}: {e}")
+        conn.close()
+    except Exception as e:
+        print(f"[ERROR] DB Error: {e}")
     return known_embeddings, known_metadata
 
 
@@ -415,13 +406,14 @@ def register_face():
         return jsonify({"error": "Missing image or images"}), 400
 
     try:
-        obj_id = ObjectId(student_id)
-    except Exception:
-        return jsonify({"error": "Invalid student ID format"}), 400
-
-    student = students_collection.find_one({"_id": obj_id})
-    if not student:
-        return jsonify({"error": f"Student ID '{student_id}' not found"}), 404
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT id FROM students WHERE id = ?", (student_id,))
+        if not c.fetchone():
+            conn.close()
+            return jsonify({"error": f"Student ID '{student_id}' not found"}), 404
+    except Exception as e:
+        return jsonify({"error": f"DB Error: {e}"}), 500
 
     all_images = images_data[:]
     if image_data:
@@ -445,14 +437,14 @@ def register_face():
     if norm > 0:
         avg_embedding = avg_embedding / norm
 
-    students_collection.update_one(
-        {"_id": obj_id},
-        {"$set": {
-            "faceRegistered": True,
-            "faceEmbedding":  avg_embedding.tolist(),
-            "embeddingModel": "mediapipe_face_landmarker_geometric",
-        }}
-    )
+    emb_str = ",".join(str(x) for x in avg_embedding.tolist())
+    try:
+        c.execute("UPDATE students SET face_registered = 1, face_embedding = ? WHERE id = ?", (emb_str, student_id))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": f"DB Update Error: {e}"}), 500
 
     return jsonify({
         "message":        "Face registered successfully!",
@@ -595,7 +587,7 @@ def get_face_mesh():
 
 
 if __name__ == "__main__":
-    print("[INFO] MediaPipe FaceLandmarker (Tasks API) loaded ✓")
+    print("[INFO] MediaPipe FaceLandmarker (Tasks API) loaded successfully")
     print(f"[INFO] Similarity threshold: {SIMILARITY_THRESHOLD}")
     # On Windows, debug=True can cause [WinError 10038] during reloads.
     # Set to False for production/stable testing.

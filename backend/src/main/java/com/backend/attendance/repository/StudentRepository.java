@@ -3,13 +3,13 @@ package com.backend.attendance.repository;
 import com.backend.attendance.model.Student;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface StudentRepository extends MongoRepository<Student, String> {
+public interface StudentRepository extends JpaRepository<Student, String> {
     List<Student> findByTutorId(String tutorId);
     Page<Student> findByTutorId(String tutorId, Pageable pageable);
 

@@ -1,10 +1,8 @@
 package com.backend.attendance.model;
 
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -12,20 +10,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "coaching_centres")
+@Entity
+@Table(name = "coaching_centres")
 public class CoachingCentre {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     private String centreName;
     private String ownerName;
     private String adminId;
 
-    @Indexed(unique = true)
+    @Column(unique = true)
     private String email;
 
-    @Indexed(unique = true)
+    @Column(unique = true)
     private String phone;
 
     private String address;
@@ -33,6 +33,6 @@ public class CoachingCentre {
     @Builder.Default
     private Boolean isActive = true;
 
-    @CreatedDate
+    @CreationTimestamp
     private LocalDateTime createdAt;
 }

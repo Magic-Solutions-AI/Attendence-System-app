@@ -4,17 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "notifications")
+@Entity
+@Table(name = "notifications")
 public class Notification {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     private String tutorId;
     private String studentId;

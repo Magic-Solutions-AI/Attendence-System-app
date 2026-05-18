@@ -44,6 +44,17 @@ public class FaceProxyController {
         factory.setReadTimeout(90_000);      // 90 seconds
         factory.setBufferRequestBody(false); // stream large bodies instead of buffering
         this.restTemplate = new RestTemplate(factory);
+        
+        // Prevent RestTemplate from throwing exceptions on 4xx/5xx errors
+        // This allows the proxy to transparently forward Flask errors to the frontend
+        this.restTemplate.setErrorHandler(new org.springframework.web.client.ResponseErrorHandler() {
+            @Override
+            public boolean hasError(org.springframework.http.client.ClientHttpResponse response) {
+                return false;
+            }
+            @Override
+            public void handleError(org.springframework.http.client.ClientHttpResponse response) {}
+        });
     }
 
     // ── POST /api/face/register ───────────────────────────────────

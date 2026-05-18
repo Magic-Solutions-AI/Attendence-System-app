@@ -21,7 +21,11 @@ public class EmailService {
         message.setTo(to);
         message.setSubject(subject);
         message.setText(body);
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Failed to send email to " + to + " (Offline Mode): " + e.getMessage());
+        }
     }
 
     public void sendOtpEmail(String to, String otp) {
