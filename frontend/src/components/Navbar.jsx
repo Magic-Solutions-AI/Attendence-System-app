@@ -13,6 +13,7 @@ const Navbar = ({ setIsSidebarOpen, isSidebarOpen }) => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [editErrors, setEditErrors] = useState({});
 
     const [editForm, setEditForm] = useState({
         fullName: '',
@@ -67,6 +68,12 @@ const Navbar = ({ setIsSidebarOpen, isSidebarOpen }) => {
 
     const handleEditSubmit = async (e) => {
         e.preventDefault();
+        const phoneRegex = /^[0-9]{10}$/;
+        if (editForm.phoneNumber && !phoneRegex.test(editForm.phoneNumber)) {
+            setEditErrors({ phoneNumber: 'Phone must be exactly 10 digits' });
+            return;
+        }
+        setEditErrors({});
         try {
             setIsSubmitting(true);
             const loadingToast = toast.loading('Updating profile...');
@@ -327,10 +334,14 @@ const Navbar = ({ setIsSidebarOpen, isSidebarOpen }) => {
                                         type="tel"
                                         value={editForm.phoneNumber}
                                         onChange={e => setEditForm(p => ({ ...p, phoneNumber: e.target.value }))}
-                                        className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                        placeholder="Enter phone number"
+                                        className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${editErrors.phoneNumber ? 'border-red-400' : 'border-slate-200'}`}
+                                        placeholder="10 digit mobile number"
+                                        maxLength={10}
+                                        pattern="[0-9]{10}"
+                                        title="Please enter exactly 10 digits"
                                     />
                                 </div>
+                                {editErrors.phoneNumber && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">error</span>{editErrors.phoneNumber}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">

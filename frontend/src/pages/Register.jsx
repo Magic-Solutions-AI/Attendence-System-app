@@ -6,6 +6,7 @@ import API_BASE_URL from '../config';
 const Register = () => {
     const [step, setStep] = useState(1);
     const navigate = useNavigate();
+    const [errors, setErrors] = useState({});
 
     // Form states
     const [formData, setFormData] = useState({
@@ -32,13 +33,32 @@ const Register = () => {
 
     const handleNext = (e) => {
         e.preventDefault();
-        // Add validation for Step 1 here if needed
+        const newErrors = {};
+        if (formData.password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters';
+        }
+        if (formData.password !== formData.confirmPassword) {
+            newErrors.confirmPassword = 'Passwords do not match';
+        }
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+        setErrors({});
         setStep(2);
         window.scrollTo(0, 0);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const newErrors = {};
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(formData.phoneNumber)) {
+            newErrors.phoneNumber = 'Phone number must be exactly 10 digits';
+            setErrors(newErrors);
+            return;
+        }
+        setErrors({});
         console.log('Submitting Registration:', formData);
 
         try {
@@ -163,15 +183,16 @@ const Register = () => {
                                         <div className="relative">
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
                                             <input
-                                                className="form-input block w-full rounded-lg border-slate-300 bg-white text-slate-900 pl-11 pr-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all duration-200 outline-none focus:border-primary"
+                                                className={`form-input block w-full rounded-lg bg-white text-slate-900 pl-11 pr-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all duration-200 outline-none ${errors.password ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary'}`}
                                                 id="password"
-                                                placeholder="••••••••"
+                                                placeholder="Min 6 characters"
                                                 type="password"
                                                 value={formData.password}
                                                 onChange={handleChange}
                                                 required
                                             />
                                         </div>
+                                        {errors.password && <p className="text-xs text-red-500 mt-0.5 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">error</span>{errors.password}</p>}
                                     </div>
 
                                     <div className="flex flex-col gap-2">
@@ -179,15 +200,16 @@ const Register = () => {
                                         <div className="relative">
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock_reset</span>
                                             <input
-                                                className="form-input block w-full rounded-lg border-slate-300 bg-white text-slate-900 pl-11 pr-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all duration-200 outline-none focus:border-primary"
+                                                className={`form-input block w-full rounded-lg bg-white text-slate-900 pl-11 pr-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all duration-200 outline-none ${errors.confirmPassword ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary'}`}
                                                 id="confirmPassword"
-                                                placeholder="••••••••"
+                                                placeholder="Re-enter password"
                                                 type="password"
                                                 value={formData.confirmPassword}
                                                 onChange={handleChange}
                                                 required
                                             />
                                         </div>
+                                        {errors.confirmPassword && <p className="text-xs text-red-500 mt-0.5 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">error</span>{errors.confirmPassword}</p>}
                                     </div>
                                 </div>
                                 <div className="pt-4">
@@ -254,15 +276,19 @@ const Register = () => {
                                         <div className="relative">
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">call</span>
                                             <input
-                                                className="form-input block w-full rounded-lg border-slate-300 bg-white text-slate-900 pl-11 pr-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all duration-200 outline-none focus:border-primary"
+                                                className={`form-input block w-full rounded-lg bg-white text-slate-900 pl-11 pr-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all duration-200 outline-none ${errors.phoneNumber ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary'}`}
                                                 id="phoneNumber"
-                                                placeholder="+1 (555) 000-0000"
+                                                placeholder="10 digit mobile number"
                                                 type="tel"
+                                                maxLength={10}
+                                                pattern="[0-9]{10}"
+                                                title="Please enter exactly 10 digits"
                                                 value={formData.phoneNumber}
                                                 onChange={handleChange}
                                                 required
                                             />
                                         </div>
+                                        {errors.phoneNumber && <p className="text-xs text-red-500 mt-0.5 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">error</span>{errors.phoneNumber}</p>}
                                     </div>
                                 </div>
                                 {/* Address Textarea */}

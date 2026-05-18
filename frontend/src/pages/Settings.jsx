@@ -18,6 +18,7 @@ const Settings = () => {
     });
     const [tutorLoading, setTutorLoading] = useState(false);
     const [tutorMsg, setTutorMsg] = useState(null);
+    const [tutorErrors, setTutorErrors] = useState({});
 
     // Edit Centre form state
     const [centreForm, setCentreForm] = useState({
@@ -29,6 +30,7 @@ const Settings = () => {
     });
     const [centreLoading, setCentreLoading] = useState(false);
     const [centreMsg, setCentreMsg] = useState(null);
+    const [centreErrors, setCentreErrors] = useState({});
 
     // Load tutors and centre info on mount
     useEffect(() => {
@@ -67,6 +69,12 @@ const Settings = () => {
 
     const handleAddTutor = async (e) => {
         e.preventDefault();
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(tutorForm.phoneNumber)) {
+            setTutorErrors({ phoneNumber: 'Phone must be exactly 10 digits' });
+            return;
+        }
+        setTutorErrors({});
         setTutorLoading(true);
         setTutorMsg(null);
         try {
@@ -97,6 +105,12 @@ const Settings = () => {
 
     const handleUpdateCentre = async (e) => {
         e.preventDefault();
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(centreForm.phone)) {
+            setCentreErrors({ phone: 'Phone must be exactly 10 digits' });
+            return;
+        }
+        setCentreErrors({});
         setCentreLoading(true);
         setCentreMsg(null);
         try {
@@ -181,11 +195,15 @@ const Settings = () => {
                                         id="tutor-phone"
                                         type="tel"
                                         required
-                                        placeholder="9876543210"
-                                        className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        placeholder="10 digit mobile number"
+                                        maxLength={10}
+                                        pattern="[0-9]{10}"
+                                        title="Please enter exactly 10 digits"
+                                        className={`border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${tutorErrors.phoneNumber ? 'border-red-400' : 'border-slate-300'}`}
                                         value={tutorForm.phoneNumber}
                                         onChange={e => setTutorForm({ ...tutorForm, phoneNumber: e.target.value })}
                                     />
+                                    {tutorErrors.phoneNumber && <p className="text-xs text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">error</span>{tutorErrors.phoneNumber}</p>}
                                 </div>
                                 <div className="flex flex-col gap-1.5">
                                     <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Password</label>
@@ -303,10 +321,15 @@ const Settings = () => {
                                         id="centre-phone"
                                         type="tel"
                                         required
-                                        className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        placeholder="10 digit mobile number"
+                                        maxLength={10}
+                                        pattern="[0-9]{10}"
+                                        title="Please enter exactly 10 digits"
+                                        className={`border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${centreErrors.phone ? 'border-red-400' : 'border-slate-300'}`}
                                         value={centreForm.phone}
                                         onChange={e => setCentreForm({ ...centreForm, phone: e.target.value })}
                                     />
+                                    {centreErrors.phone && <p className="text-xs text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">error</span>{centreErrors.phone}</p>}
                                 </div>
                                 <div className="md:col-span-2 flex flex-col gap-1.5">
                                     <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Address</label>
