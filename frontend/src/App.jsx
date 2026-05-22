@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { UserProvider } from './context/UserContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -18,7 +18,7 @@ import './App.css';
 function App() {
   return (
     <UserProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Toaster
           position="top-right"
           toastOptions={{
@@ -57,7 +57,7 @@ function App() {
           {/* Catch-all → Not Found error page */}
           <Route path="*" element={<Navigate to="/error" state={{ errorType: 'NOT_FOUND' }} replace />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </UserProvider>
   );
 }
