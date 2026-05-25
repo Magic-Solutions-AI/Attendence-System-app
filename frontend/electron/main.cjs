@@ -59,14 +59,30 @@ app.whenReady().then(() => {
     height: 800,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
+      // Required: allows file:// protocol to load local JS/CSS without
+      // CORS blocking (crossorigin attributes on Vite-built assets would
+      // otherwise cause a blank white page in packaged builds).
+      webSecurity: false
     }
+  })
+
+  // Log renderer errors to main process console for diagnostics
+  win.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    console.error(`[Renderer] Failed to load: ${validatedURL} — ${errorDescription} (${errorCode})`)
+  })
+
+  win.webContents.on('render-process-gone', (event, details) => {
+    console.error('[Renderer] Render process gone:', details.reason)
   })
   
   // In development, load from Vite dev server.
   // In production, load the built index.html.
   if (app.isPackaged) {
-    win.loadFile(path.join(__dirname, '../dist/index.html'))
+    const indexPath = path.join(__dirname, '../dist/index.html')
+    win.loadFile(indexPath).catch(err => {
+      console.error('[Main] Failed to load index.html:', err)
+    })
   } else {
     // Wait for backend to start, then load
     setTimeout(() => win.loadURL('http://localhost:5173'), 3000)
