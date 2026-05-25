@@ -583,8 +583,9 @@
     </p>
 
     <div class="hero-actions">
-      <!-- ⬇️ REPLACE the href below with your actual installer download link -->
-      <a id="download-btn" href="https://github.com/Magic-Solutions-AI/Attendence-System-app/releases/download/v1.1.0/AttendX.Setup.0.0.0.exe" class="btn-download">
+      <a id="download-btn"
+         href="https://github.com/Magic-Solutions-AI/Attendence-System-app/releases/latest/download/AttendX.Setup.exe"
+         class="btn-download">
         <span class="material-symbols-outlined">download</span>
         Download AttendX
       </a>
@@ -598,6 +599,10 @@
       <span><span class="material-symbols-outlined">check_circle</span> Free to use</span>
       <span><span class="material-symbols-outlined">check_circle</span> Works offline</span>
       <span><span class="material-symbols-outlined">check_circle</span> Windows 10/11</span>
+      <span id="version-badge" style="opacity:0;transition:opacity 0.4s;">
+        <span class="material-symbols-outlined" style="color:#a78bfa;">new_releases</span>
+        <span id="version-text">Loading…</span>
+      </span>
     </div>
 
     <div class="os-badges">
@@ -738,8 +743,9 @@
       <h2>Ready to Modernize<br />Your Centre?</h2>
       <p>Download AttendX today. Free, fast, and works completely offline.</p>
 
-      <!-- ⬇️ REPLACE the href below with your actual installer download link -->
-      <a href="https://github.com/Magic-Solutions-AI/Attendence-System-app/releases/download/v1.1.0/AttendX.Setup.0.0.0.exe" class="btn-download" style="display:inline-flex; font-size:17px; padding: 18px 44px;">
+      <!-- Permanent latest-release URL — auto-updates with every GitHub Release -->
+      <a href="https://github.com/Magic-Solutions-AI/Attendence-System-app/releases/latest/download/AttendX.Setup.exe"
+         class="btn-download" style="display:inline-flex; font-size:17px; padding: 18px 44px;">
         <span class="material-symbols-outlined" style="font-size:24px;">download</span>
         Download for Windows
       </a>
@@ -757,17 +763,37 @@
     <p>Built with ❤️ by <a href="https://github.com/Magic-Solutions" target="_blank">Magic Solutions</a> &nbsp;·&nbsp; &copy; 2025 AttendX. All rights reserved.</p>
   </footer>
 
-  <!-- Scroll reveal JS -->
+  <!-- Scroll reveal + live version badge from GitHub API -->
   <script>
+    // ── Scroll reveal ──
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
+        if (entry.isIntersecting) entry.target.classList.add('visible');
       });
     }, { threshold: 0.1 });
-
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // ── Live version badge ──
+    // Fetches the latest release tag from the GitHub API and displays it
+    // next to the download button so users always see the current version.
+    (async () => {
+      try {
+        const res = await fetch(
+          'https://api.github.com/repos/Magic-Solutions-AI/Attendence-System-app/releases/latest',
+          { headers: { Accept: 'application/vnd.github+json' } }
+        );
+        if (!res.ok) return;
+        const { tag_name } = await res.json();
+        const badge = document.getElementById('version-badge');
+        const text  = document.getElementById('version-text');
+        if (badge && text && tag_name) {
+          text.textContent = tag_name;
+          badge.style.opacity = '1';
+        }
+      } catch (_) {
+        // Silently fail — badge just stays hidden if offline or API is down
+      }
+    })();
   </script>
 </body>
 </html>
