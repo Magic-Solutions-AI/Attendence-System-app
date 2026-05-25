@@ -583,12 +583,10 @@
     </p>
 
     <div class="hero-actions">
-      <a id="download-btn"
-         href="https://github.com/Magic-Solutions-AI/Attendence-System-app/releases/latest/download/AttendX.Setup.exe"
-         class="btn-download">
+      <button id="download-btn" class="btn-download" onclick="triggerDownload(this)">
         <span class="material-symbols-outlined">download</span>
-        Download AttendX
-      </a>
+        <span id="dl-btn-text">Download AttendX</span>
+      </button>
       <a href="#features" class="btn-secondary">
         <span class="material-symbols-outlined">info</span>
         Learn More
@@ -743,12 +741,11 @@
       <h2>Ready to Modernize<br />Your Centre?</h2>
       <p>Download AttendX today. Free, fast, and works completely offline.</p>
 
-      <!-- Permanent latest-release URL — auto-updates with every GitHub Release -->
-      <a href="https://github.com/Magic-Solutions-AI/Attendence-System-app/releases/latest/download/AttendX.Setup.exe"
-         class="btn-download" style="display:inline-flex; font-size:17px; padding: 18px 44px;">
+      <!-- Direct download — finds the real .exe from GitHub API -->
+      <button onclick="triggerDownload(this)" class="btn-download" style="display:inline-flex; font-size:17px; padding: 18px 44px; border:none; cursor:pointer;">
         <span class="material-symbols-outlined" style="font-size:24px;">download</span>
-        Download for Windows
-      </a>
+        <span>Download for Windows</span>
+      </button>
 
       <div class="download-meta" style="margin-top:24px;">
         <span><span class="material-symbols-outlined">check_circle</span> No subscription</span>
@@ -763,8 +760,63 @@
     <p>Built with ❤️ by <a href="https://github.com/Magic-Solutions" target="_blank">Magic Solutions</a> &nbsp;·&nbsp; &copy; 2025 AttendX. All rights reserved.</p>
   </footer>
 
-  <!-- Scroll reveal + live version badge from GitHub API -->
   <script>
+    const REPO = 'Magic-Solutions-AI/Attendence-System-app';
+    const API  = `https://api.github.com/repos/${REPO}/releases/latest`;
+
+    // Cache the resolved download URL so we only hit the API once
+    let cachedAssetUrl = null;
+    let cachedTag      = null;
+
+    // ── Fetch release info once on page load ──
+    (async () => {
+      try {
+        const res  = await fetch(API, { headers: { Accept: 'application/vnd.github+json' } });
+        if (!res.ok) throw new Error('GitHub API error');
+        const data = await res.json();
+
+        // Find the Windows installer (.exe) asset
+        const exeAsset = data.assets?.find(a => a.name.endsWith('.exe'));
+        if (exeAsset) cachedAssetUrl = exeAsset.browser_download_url;
+        cachedTag = data.tag_name;
+
+        // Show version badge
+        const badge = document.getElementById('version-badge');
+        const text  = document.getElementById('version-text');
+        if (badge && text && cachedTag) {
+          text.textContent = cachedTag;
+          badge.style.opacity = '1';
+        }
+      } catch (_) {
+        // API unreachable — fallback URL used in triggerDownload()
+      }
+    })();
+
+    // ── Direct download trigger ──
+    // Called by both download buttons via onclick.
+    // Uses the asset URL discovered from the API; falls back to the
+    // /releases/latest page if the API hasn't resolved yet.
+    function triggerDownload(btn) {
+      const url = cachedAssetUrl
+        || `https://github.com/${REPO}/releases/latest`;
+
+      // Show loading state on whichever button was clicked
+      const textEl = btn.querySelector('span:last-child') || btn;
+      const orig   = textEl.textContent;
+      textEl.textContent = 'Starting download…';
+      setTimeout(() => { textEl.textContent = orig; }, 3000);
+
+      // Create a hidden <a> and click it — this forces the browser to
+      // download the file directly instead of navigating away
+      const a = document.createElement('a');
+      a.href     = url;
+      a.download = 'AttendX.Setup.exe'; // suggested filename
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
     // ── Scroll reveal ──
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -772,28 +824,6 @@
       });
     }, { threshold: 0.1 });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-    // ── Live version badge ──
-    // Fetches the latest release tag from the GitHub API and displays it
-    // next to the download button so users always see the current version.
-    (async () => {
-      try {
-        const res = await fetch(
-          'https://api.github.com/repos/Magic-Solutions-AI/Attendence-System-app/releases/latest',
-          { headers: { Accept: 'application/vnd.github+json' } }
-        );
-        if (!res.ok) return;
-        const { tag_name } = await res.json();
-        const badge = document.getElementById('version-badge');
-        const text  = document.getElementById('version-text');
-        if (badge && text && tag_name) {
-          text.textContent = tag_name;
-          badge.style.opacity = '1';
-        }
-      } catch (_) {
-        // Silently fail — badge just stays hidden if offline or API is down
-      }
-    })();
   </script>
 </body>
 </html>
