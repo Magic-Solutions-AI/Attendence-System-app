@@ -500,37 +500,9 @@ const Login = () => {
             {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
 
             <div className="font-display bg-background-light text-slate-900 min-h-screen flex items-center justify-center p-4">
-                <div className="max-w-[1000px] w-full bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[600px]">
-                    {/* Left Side: Illustration / Branding */}
-                    <div className="hidden md:flex md:w-1/2 bg-primary p-12 flex-col justify-between relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
-                        <div className="relative z-10 flex items-center gap-3 text-white">
-                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-md">
-                                <span className="material-symbols-outlined text-2xl leading-none">auto_awesome</span>
-                            </div>
-                            <h2 className="text-xl font-bold tracking-tight">Smart Attendance</h2>
-                        </div>
-                        <div className="relative z-10 mt-auto">
-                            <div className="mb-8 rounded-xl overflow-hidden shadow-lg border border-white/20">
-                                <img
-                                    alt="Analytics dashboard interface"
-                                    className="w-full h-48 object-cover"
-                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFcRlK3FP6BTnv2M_btEcxVQYVT_HswfTHad_eqg_pfqjVp9p-ukeuopUpLwjuAawus6UFsQ9kNjOW4YsVgZ02pqJngBgS1zf_sGHs0Bw0M0R1w4Z9tXpnZDKJThHKNIEbgnJiYFjRbZymKP2_sv0Sd5yR2wdvpvZpGswTrVhC09KyDN3T9VPcIvOYKDGMdek9I0yGjLGpwmzDH4vtl8UnYykTvEtdRMnNYtcz05kjNbU8RAaTnulB2uI3zqr5RJIBj1cran0EfdM"
-                                />
-                            </div>
-                            <h1 className="text-3xl font-bold text-white mb-4 leading-tight">Effortless workforce management.</h1>
-                            <p className="text-primary/10 text-white/80 text-lg">The smartest way to track attendance, productivity, and team performance in real-time.</p>
-                        </div>
-                        <div className="relative z-10 mt-8 flex gap-2">
-                            <div className="h-1 w-8 bg-white rounded-full"></div>
-                            <div className="h-1 w-2 bg-white/40 rounded-full"></div>
-                            <div className="h-1 w-2 bg-white/40 rounded-full"></div>
-                        </div>
-                    </div>
-
-                    {/* Right Side: Login Form */}
-                    <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+                <div className="max-w-[480px] w-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                    {/* Login Form */}
+                    <div className="w-full p-8 md:p-10 flex flex-col justify-center">
                         <div className="mb-10">
                             <h3 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h3>
                             <p className="text-slate-500">Enter your details to access your dashboard.</p>

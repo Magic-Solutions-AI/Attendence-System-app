@@ -7,7 +7,7 @@ import tailwindcss from '@tailwindcss/vite'
  * injects on every <script type="module"> and <link rel="stylesheet"> tag.
  *
  * WHY THIS IS NEEDED:
- *   When the packaged Electron app loads dist/index.html via file:// protocol,
+ *   When the packaged Electron app loads renderer/index.html via file:// protocol,
  *   Chromium enforces CORS for any tag with `crossorigin`. Since file:// has a
  *   null origin, CORS is always denied → the JS bundle and CSS never load →
  *   blank white page. Removing the attribute tells Chromium to skip CORS and
@@ -17,7 +17,6 @@ function removeElectronCrossorigin() {
   return {
     name: 'remove-crossorigin-for-electron',
     transformIndexHtml(html) {
-      // Remove crossorigin attribute (with or without a value)
       return html
         .replace(/ crossorigin="[^"]*"/g, '')
         .replace(/ crossorigin/g, '')
@@ -31,11 +30,13 @@ export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss(), removeElectronCrossorigin()],
   build: {
+    // KEY FIX: output to renderer/ not dist/
+    // electron-builder excludes its own output dir (dist/) from the ASAR
+    // by default. By building to renderer/, the React app is always
+    // packaged correctly inside the installer.
+    outDir: 'renderer',
     rollupOptions: {
-      output: {
-        // Disable module preload injection — these also get crossorigin attrs
-        // and aren't needed for Electron builds
-      },
+      output: {},
     },
     // Disable automatic modulepreload polyfill injection (also adds crossorigin)
     modulePreload: false,

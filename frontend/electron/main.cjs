@@ -79,7 +79,7 @@ app.whenReady().then(() => {
   // In development, load from Vite dev server.
   // In production, load the built index.html.
   if (app.isPackaged) {
-    const indexPath = path.join(__dirname, '../dist/index.html')
+    const indexPath = path.join(__dirname, '../renderer/index.html')
     win.loadFile(indexPath).catch(err => {
       console.error('[Main] Failed to load index.html:', err)
     })
